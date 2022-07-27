@@ -1,0 +1,15 @@
+{
+    "development": {
+        "PORT": 8000,
+        "MONGO_URL": "mongodb://localhost:27017/neat",
+        "JWT_SECRET": "secretbangetnih123",
+        "JWT_EXP": "50000h"
+        
+    },
+    "production": {
+        "PORT": 80,
+        "MONGO_URL": "mongodb+srv://reingalrt:Kuatcore141@cluster0.fwdli.mongodb.net/webx?retryWrites=true&w=majority",
+        "JWT_SECRET": "secretbangetnih123",
+        "JWT_EXP": "50000h"
+    }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "neat",
+  "version": "1.0.0",
+  "description": "a cleanliness backend for redwoods & qualita",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "oktaviano fahdi",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.0",
+    "express": "^4.18.1",
+    "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.21",
+    "mongoose": "^6.4.7",
+    "passport": "^0.6.0",
+    "passport-local": "^1.0.0"
+  }
+}

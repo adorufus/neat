@@ -1,6 +1,6 @@
 var routes = {
     userRoute: require('./userRoutes'),
-    neatRoute: require('./neatRoutes')
+    neatRoute: require('./neatRoutes'),
 }
 
 module.exports = routes

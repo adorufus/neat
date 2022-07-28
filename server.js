@@ -7,10 +7,12 @@ const bodyParser = require('body-parser')
 const http = require('http')
 const routes = require('./routes/index')
 const passport = require('passport')
+const path = require('path')
 
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json())
 app.use(passport.initialize())
+app.use('/images', express.static('public/uploaded_image'))
 
 app.get("/", (req, res) => {
     res.status(403).json({

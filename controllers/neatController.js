@@ -2,7 +2,8 @@ const { default: mongoose } = require('mongoose')
 var NeatModel = require('../models/neatModel.js')
 
 var ChecklistItemModel = mongoose.model('checklistItem')
-var ChecklistModel = mongoose.model('checklist')
+var FloorModel = mongoose.model('floor')
+var AreaModel = mongoose.model('area')
 
 /**
  * neatController.js
@@ -33,6 +34,134 @@ const getItem = (files) =>
   })
 
 module.exports = {
+  create_floor: async function (req, res) {
+    var { floor, area_id } = req.body
+
+    var floorModel = new FloorModel()
+
+    floorModel.floor = floor
+    for (var i = 0; i < area_id.length; i++) {
+      console
+      floorModel.area.push(area_id[i])
+    }
+
+    floorModel.save((err, data) => {
+      if (err) {
+        return res.status(400).json({
+          status: 'failure',
+          error: err,
+        })
+      }
+
+      data.populate(
+        {
+          path: 'area',
+          populate: {
+            path: 'checklist',
+          },
+        },
+        (areaErr) => {
+          if (areaErr) {
+            return res.status(400).json({
+              status: 'failure',
+              error: areaErr,
+            })
+          }
+
+          return res.status(200).json({
+            status: 'success',
+            message: 'floor created',
+            data: data,
+          })
+        },
+      )
+    })
+  },
+
+  get_all_floor: (req, res) => {
+    FloorModel.find()
+      .populate({
+        path: 'area',
+        populate: {
+          path: 'checklist',
+        },
+      })
+      .exec((err, data) => {
+        if (err) {
+          return res.status(400).json({
+            status: 'failure',
+            error: areaErr,
+          })
+        }
+
+        return res.status(200).json({
+          status: 'success',
+          data: data,
+        })
+      })
+  },
+
+  create_area: (req, res) => {
+    var { area_name, checklist_item } = req.body
+
+    var areaModel = new AreaModel()
+
+    areaModel.area_name = area_name
+
+    for (var i = 0; i < checklist_item.length; i++) {
+      areaModel.checklist.push(checklist_item[i])
+    }
+
+    areaModel.save((err, data) => {
+      if (err) {
+        return res.status(400).json({
+          status: 'failure',
+          error: err,
+        })
+      }
+
+      data.populate('checklist', (err) => {
+        return res.status(200).json({
+          status: 'success',
+          message: 'area created',
+          data: data,
+        })
+      })
+    })
+  },
+
+  create_checklist_item: (req, res) => {
+    var { task_name, checked } = req.body
+
+    var file = req.file
+
+    var checklistItem = new ChecklistItemModel()
+
+    checklistItem.task_name = task_name
+    checklistItem.checked = checked
+
+    if (file) {
+      checklistItem.proof_pict = 'http://localhost:8000/images/' + file.filename
+    } else {
+      checklistItem.proof_pict = ''
+    }
+
+    checklistItem.save((err, data) => {
+      if (err) {
+        res.status(400).json({
+          status: 'failure',
+          error: err,
+        })
+      }
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'checklist created',
+        data: data,
+      })
+    })
+  },
+
   /**
    * neatController.list()
    */
@@ -49,7 +178,7 @@ module.exports = {
           },
           {
             path: 'area_3',
-        },
+          },
         ],
       })
       .exec(function (err, neats) {
@@ -61,9 +190,9 @@ module.exports = {
         }
 
         return res.json({
-            status: "success",
-            message: "Data found",
-            data: neats
+          status: 'success',
+          message: 'Data found',
+          data: neats,
         })
       })
   },
@@ -98,7 +227,7 @@ module.exports = {
   create: async function (req, res) {
     files = req.files
 
-    var checklist = new ChecklistModel()
+    var checklist = new FloorModel()
 
     await getItem(files).then((items) => {
       if (items && items.length == 3) {

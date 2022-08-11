@@ -19,8 +19,8 @@ router.get('/neat/checklists', neatController.get_checklist_by_area)
 /*
  * POST
  */
-// router.post('/neat/data/create', [middlewares.jwt_verifier.verify_token, middlewares.fileUpload.array("images", 3)], neatController.create);
-router.post('/neat/data/create', [middlewares.jwt_verifier.verify_token], neatController.create);
+router.post('/neat/data/create', [middlewares.jwt_verifier.verify_token, middlewares.fileUpload.array("images")], neatController.create);
+// router.post('/neat/data/create', [middlewares.jwt_verifier.verify_token], neatController.create);
 router.post('/neat/floor/create', [middlewares.jwt_verifier.verify_token], neatController.create_floor);
 router.post('/neat/area/create', [middlewares.jwt_verifier.verify_token], neatController.create_area);
 router.post('/neat/checklist/create', [middlewares.jwt_verifier.verify_token], neatController.create_checklist_item);

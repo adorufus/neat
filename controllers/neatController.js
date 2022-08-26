@@ -1,3 +1,4 @@
+const { reject } = require('lodash')
 const { default: mongoose } = require('mongoose')
 var NeatModel = require('../models/neatModel.js')
 
@@ -15,26 +16,50 @@ var ChecklistDataModel = mongoose.model('checklistData')
  */
 
 const getItem = (files, task_name) =>
-  new Promise((resolve) => {
+  new Promise((resolve, reject) => {
     items = []
     for (var i = 0; i < files.length; i++) {
       var checklistData = new ChecklistDataModel()
-      checklistData.task_name = task_name
+      // checklistData.task_name = task_name[i]
       checklistData.proof_pict =
         'http://localhost:8000/images/' + files[0].filename
-      checklistData.checked = true
+      // checklistData.checked = true
 
-      checklistData.save(async (ciErr, ciData) => {
+      checklistData.save((ciErr, ciData) => {
         if (ciErr) {
           console.log(ciErr)
+          reject(ciErr)
           return
         }
 
-        items.push(ciData._id)
+        console.log('ciData: ' + ciData)
+
+        items.push(ciData._id.toHexString())
       })
     }
 
     setTimeout(() => resolve(items), 1000)
+  })
+
+const getChecklists = (data) =>
+  new Promise((resolve, reject) => {
+    checklists = []
+
+    for (var i = 0; i < data.length; i++) {
+      ChecklistItemModel.find({ area: data[i]._id }, (ciErr, ciData) => {
+        if (ciErr) {
+          console.log(ciErr)
+          reject(ciErr)
+          return
+        }
+
+        checklists.push(ciData.length)
+
+        console.log(checklists)
+      })
+    }
+
+    setTimeout(() => resolve(checklists), 1000)
   })
 
 module.exports = {
@@ -79,18 +104,25 @@ module.exports = {
 
   get_area_by_floor: (req, res) => {
     var { floor_id } = req.query
-    AreaModel.find({ floor: floor_id }, (err, data) => {
-      if (err) {
-        return res.status(400).json({
-          status: 'failure',
-          error: err,
-        })
-      }
+    AreaModel.find({ floor: floor_id }, async (err, data) => {
+      await getChecklists(data).then((promise, reject) => {
+        if (reject) {
+          console.log(reject)
+        } else {
+          if (err) {
+            return res.status(400).json({
+              status: 'failure',
+              error: err,
+            })
+          }
 
-      return res.status(200).json({
-        status: 'success',
-        message: 'Floor Found',
-        data: data,
+          return res.status(200).json({
+            status: 'success',
+            message: 'Floor Found',
+            checklist_length: promise,
+            data: data,
+          })
+        }
       })
     })
   },
@@ -223,58 +255,155 @@ module.exports = {
   /**
    * neatController.create()
    */
+  // create: async function (req, res) {
+  //   files = req.files
+
+  //   var { pic, floor, floor_id, area_name, task_name, checked } = req.body
+
+  //   var neatData = new NeatDataModel()
+  //   var neat = new NeatModel()
+
+  //   neatData.floor = floor
+
+  //   await getItem(files, task_name).then((items) => {
+  //     console.log(items)
+  //     if (items) {
+  //       var neatData = new NeatDataModel()
+  //       var areaData = new AreaDataModel()
+
+  //       areaData.area_name = area_name
+  //       areaData.checklist = items
+
+  //       areaData.save((thisErr, aData) => {
+  //         if (thisErr) {
+  //           console.log(thisErr)
+  //           return
+  //         }
+
+  //         console.log(aData)
+  //         neatData.floor = floor_id
+  //         neatData.area = aData._id
+
+  //         neatData.save((err, nData) => {
+  //           var neat = new NeatModel({
+  //             date_time: Date.now(),
+  //             pic: pic,
+  //             neat_data: nData._id,
+  //           })
+
+  //           neat.save(function (err, neat) {
+  //             if (err) {
+  //               return res.status(500).json({
+  //                 message: 'Error when creating neat',
+  //                 error: err,
+  //               })
+  //             }
+
+  //             neat.populate(
+  //               {
+  //                 path: 'neat_data',
+  //                 populate: [
+  //                   {
+  //                     path: 'area',
+  //                     populate: {
+  //                       path: 'checklist',
+  //                     },
+  //                   },
+  //                   {
+  //                     path: 'floor',
+  //                   },
+  //                 ],
+  //               },
+  //               (err) => {
+  //                 return res.status(200).json({
+  //                   status: 'succes',
+  //                   message: 'Task Completed',
+  //                   data: neat,
+  //                 })
+  //               },
+  //             )
+
+  //             // neat.populate('checklist', (err) => {
+  //             //   neat.checklist.populate(
+  //             //     ['area_1', 'area_2', 'area_3'],
+  //             //     (error) => {
+
+  //             //     },
+  //             //   )
+  //             // })
+  //           })
+  //         })
+  //       })
+  //     } else {
+  //       return res.status(400).json({
+  //         status: 'failure',
+  //         message: 'Tolong selesaikan semua area ya!',
+  //       })
+  //     }
+  //   })
+  // },
   create: async function (req, res) {
     files = req.files
 
-    var { pic, neat_data, floor_id, area_name, task_name, checked } = req.body
+    var { pic, floor, floor_id, checked } = req.body
 
     var neatData = new NeatDataModel()
     var neat = new NeatModel()
 
-    neatData.floor = neat_data['floor']
+    neatData.floor = floor
 
     await getItem(files).then((items) => {
-      if (items && items.length == 3) {
+      console.log(items)
+      if (items) {
         var neatData = new NeatDataModel()
-        var areaData = new AreaDataModel()
 
-        areaData.area_name = area_name
-        areaData.checklist = items
+        neatData.floor = floor_id
+        neatData.checklist = items
 
-        areaData.save((err, aData) => {
-          neatData.floor = floor_id
-          neatData.area = aData._id
+        neatData.save((err, nData) => {
+          var neat = new NeatModel({
+            date_time: Date.now(),
+            pic: pic,
+            neat_data: nData._id,
+          })
 
-          neatData.save((err, nData) => {
-            var neat = new NeatModel({
-              date_time: Date.now(),
-              pic: req.body.pic,
-              neat_data: nData._id,
-            })
-
-            neat.save(function (err, neat) {
-              if (err) {
-                return res.status(500).json({
-                  message: 'Error when creating neat',
-                  error: err,
-                })
-              }
-
-              return res.status(200).json({
-                status: 'succes',
-                message: 'Task Completed',
-                data: neat,
+          neat.save(function (err, neat) {
+            if (err) {
+              return res.status(500).json({
+                message: 'Error when creating neat',
+                error: err,
               })
+            }
 
-              // neat.populate('checklist', (err) => {
-              //   neat.checklist.populate(
-              //     ['area_1', 'area_2', 'area_3'],
-              //     (error) => {
-                    
-              //     },
-              //   )
-              // })
-            })
+            neat.populate(
+              {
+                path: 'neat_data',
+                populate: [
+                  {
+                    path: 'checklist',
+                  },
+                  {
+                    path: 'floor',
+                  },
+                ],
+              },
+              (err) => {
+                return res.status(200).json({
+                  status: 'succes',
+                  message: 'Task Completed',
+                  data: neat,
+                })
+              },
+            )
+
+            // neat.populate('checklist', (err) => {
+            //   neat.checklist.populate(
+            //     ['area_1', 'area_2', 'area_3'],
+            //     (error) => {
+
+            //     },
+            //   )
+            // })
           })
         })
       } else {

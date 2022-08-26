@@ -105,7 +105,6 @@ module.exports = {
               data: {
                 _id: doc['_id'],
                 username: username,
-                email: email,
                 role: role,
                 full_name: full_name,
               },
@@ -123,14 +122,20 @@ module.exports = {
 
   login: function (req, res) {
     passport.authenticate('local', (err, user, info) => {
-      if (err) return res.status(400).json(err)
+      if (err) return res.status(400).json({
+        status: "failure",
+        error: err
+      })
       else if (user)
         return res.status(200).json({
           status: 'success',
           message: 'user authenticated',
           token: user.generateJwt(),
         })
-      else return res.status(404).json(info)
+      else return res.status(404).json({
+        status: 'failure',
+        message: info["message"]
+      })
     })(req, res)
   },
 

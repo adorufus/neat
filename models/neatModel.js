@@ -9,7 +9,7 @@ var neatSchema = new Schema({
 
 var neatData = new Schema({
   floor: {type: Schema.Types.ObjectId, ref: 'floor', required: true},
-  area: [{type: Schema.Types.ObjectId, ref: 'areaData', required: true}],
+  checklist: [{type: Schema.Types.ObjectId, ref: 'checklistData', required: true}],
 })
 
 var areaData = new Schema({
@@ -24,8 +24,8 @@ var areaData = new Schema({
 })
 
 var checklistData = new Schema({
-  task_name: {type: String, required: true},
-  checked: { type: Boolean, required: true },
+  // task_name: {type: String, required: true},
+  // checked: { type: Boolean, required: true },
   proof_pict: { type: String },
 })
 
